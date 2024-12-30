@@ -1,4 +1,86 @@
+// import { PLACEHOLDER_IMAGE, ALL_ITEMS_ID } from '@/app/constants';
+// import {createClient, OAuthStrategy} from 'wix/sdk'
+// import { collections, products } from 'wix/stores'
+// import Cookies from "js-cookie"
+// import { WIX_REFRESG_TOKEN } from '@/app/constants'
+
+// interface CollectionFilters {
+//   limit?: number;
+//   exclude?: string;
+// }
+
+// interface ProductsFilters {
+//   limit?: number;
+//   slug?: string;
+//   collectionId?: string;
+// }
+
+// export type ProductOption = products.ProductOption
+
+// export type Variant = products.Variant 
+
+// export type Product = products.Product
+
+// export type Collection = collection.Collection
+
+// const wixClient = createClient({
+//   modules: {
+//     collections,
+//     products,
+//   },
+//   auth: OAuthStrategy({
+//     clientId: process.env.NEXT_PUBLIC_WIX_CLIENT_ID!,
+//     tokens: {
+//       refreshToken: JSON.parse(Cookies.get(WIX_REFRESH_TOKEN) || "{}"),
+//       accessToken: { value: "", expiresAt:0 }
+//     }
+//   })
+// })
+
+// export const getProduct = async (productId: string) => {
+//   return wixClient.products.getProduct(producId)
+// }
+
+// export const queryCollections = async ({
+//   limit,
+//   exclude,
+// }:CollectionFilters = {}) => {
+//   let query = wixClient.collections.queryCollections();
+
+//   if (limit) {
+//     query = query.(limit)
+//   }
+
+//   if (exclude) {
+//     query = query.ne("name", [exclude])
+//   }
+
+//   const { items } = await query.find()
+//   return items
+// }
+
+
+// export const queryProducts = async ({
+//   slug,
+//   limit,
+//   collectionId,
+// }: ProductsFilters = {}) => {
+//   let query = wixClient.porducts.queryProducts()
+
+//   if (collectionId) {
+//     query = query.eq("collectonIds", collectionId)
+//   }
+
+//   const { items } = await query.find()
+//   return items
+// }
+// // })
 import { PLACEHOLDER_IMAGE, ALL_ITEMS_ID } from '@/app/constants';
+import { createClient, OAuthStrategy } from '@wix/sdk';
+
+import { collections, products } from '@wix/stores';
+import Cookies from 'js-cookie';
+import { WIX_REFRESH_TOKEN } from '@/app/constants';
 
 interface CollectionFilters {
   limit?: number;
@@ -11,123 +93,86 @@ interface ProductsFilters {
   collectionId?: string;
 }
 
-export type ProductOption = {
-  optionType: 'color', name: string, choices: { description: string, value: string }[]
-}
+export type ProductOption = products.ProductOption;
 
-export type Variant = {
-  _id?: string,
-  variant?: { priceData: { price: number } },
-  stock?: { trackQuantity: boolean, inStock: boolean, quantity: number },
-  choices?: Record<string, string>
-}
+export type Variant = products.Variant;
 
-export type Product = {
-  _id: string,
-  slug: string,
-  name: string,
-  sku: string,
-  collectionIds: string[],
-  description: string,
-  manageVariants: boolean,
-  productOptions: ProductOption[],
-  variants: Variant[],
-  additionalInfoSections: { title: string, description: string }[],
-  media: { mainMedia: { image: { url: string; altText: string } }, items: { image: { url: string; altText: string } }[] },
-  stock: { inStock: boolean, quantity: number },
-  price: { price: number, currency: string, formatted: { price: string } }
-}
-export type Collection = {
-  _id: string,
-  name: string,
-  slug: string,
-  media: { mainMedia: { image: { url: string; altText: string } } },
-};
+export type Product = products.Product;
 
-const allCollections: Collection[] = [{
-  _id: ALL_ITEMS_ID, name: "All Products", slug: "all-products", media: { mainMedia: { image: { url: PLACEHOLDER_IMAGE, altText: "main image" } } },
-},{
-  _id: "0", name: "Collection 1", slug: "collection-1", media: { mainMedia: { image: { url: PLACEHOLDER_IMAGE, altText: "main image" } } },
-}, {
-  _id: "1", name: "Collection 2", slug: "collection-2", media: { mainMedia: { image: { url: PLACEHOLDER_IMAGE, altText: "main image" } } },
-}, {
-  _id: "2", name: "Collection 2", slug: "collection-3", media: { mainMedia: { image: { url: PLACEHOLDER_IMAGE, altText: "main image" } } },
-}];
+export type Collection = collections.Collection;
 
-const allProducts: Product[] = Array(8).fill(null).map((_, index) => ({
-  _id: `${index}`,
-  slug: `product-${index + 1}`,
-  name: `Product ${index + 1}`,
-  price: { currency: 'USD', price: 11,  formatted: { price: '11$' } },
-  manageVariants: false,
-  stock: { inStock: true, quantity: 999 },
-  sku: `SKU-${index + 1}`,
-  additionalInfoSections: [{
-    title: "Additional Info 1", description: "Additional Description 1"
-  }, {
-    title: "Additional Info 2", description: "Additional Description 2"
-  }],
-  collectionIds: [ALL_ITEMS_ID, `${index % 3}`],
-  description: `Description ${index + 1}`,
-  media: { mainMedia: { image: { url: PLACEHOLDER_IMAGE, altText: "main image" } }, items: [{ image: { url: PLACEHOLDER_IMAGE, altText: "main image" } }] },
-  variants: [
-    {
-      _id: "00000000-0000-0000-0000-000000000000",
-      choices: {},
-      variant: {
-        priceData: {
-          price: 50,
-        },
-      },
-      stock: {
-        trackQuantity: false,
-        inStock: true,
-        quantity: 999
-      }
-    }
-  ],
-  productOptions: [{optionType: "color", name: "Color", choices: [{description: "blue", value: "blue"}, {description: "green", value: "green"}]}]
-}));
+const refreshToken = Cookies.get(WIX_REFRESH_TOKEN);
+const wixClient = createClient({
+  modules: {
+    collections,
+    products,
+  },
+  auth: OAuthStrategy({
+    clientId: process.env.NEXT_PUBLIC_WIX_CLIENT_ID!,
+    tokens: {
+      refreshToken: refreshToken ? JSON.parse(refreshToken) : undefined,
+      accessToken: { value: '', expiresAt: 0 },
+    },
+  }),
+});
 
 export const getProduct = async (productId: string) => {
-  return { product: allProducts.find(({_id}) => _id === productId) };
-}
+  try {
+    return await wixClient.products.getProduct(productId);
+  } catch (error) {
+    console.error('Error fetching product:', error);
+    throw error;
+  }
+};
 
 export const queryCollections = async ({
-                                         limit,
-                                         exclude,
-                                       }: CollectionFilters = {}) => {
-  let collections = [...allCollections];
+  limit,
+  exclude,
+}: CollectionFilters = {}) => {
+  try {
+    let query = wixClient.collections.queryCollections();
 
-  if (exclude) {
-    collections = collections.filter(({name}) => name !== exclude)
+    if (limit) {
+      query = query.limit(limit);
+    }
+
+    if (exclude) {
+      query = query.ne('name', exclude);
+    }
+
+    const { items } = await query.find();
+    return items;
+  } catch (error) {
+    console.error('Error querying collections:', error);
+    throw error;
   }
-
-  if (limit) {
-    collections = collections.slice(0, limit)
-  }
-
-  return collections;
 };
 
 export const queryProducts = async ({
-                                      slug,
-                                      limit,
-                                      collectionId,
-                                    }: ProductsFilters = {}) => {
-  let products = [...allProducts];
+  slug,
+  limit,
+  collectionId,
+}: ProductsFilters = {}) => {
+  try {
+    let query = wixClient.products.queryProducts();
 
-  if (slug) {
-    products = products.filter((product) => product.slug === slug)
+    if (slug) {
+      query = query.eq('slug', slug);
+    }
+
+    if (collectionId) {
+      query = query.eq('collectionIds', collectionId);
+    }
+
+    if (limit) {
+      query = query.limit(limit);
+    }
+
+    const { items } = await query.find();
+    return items;
+  } catch (error) {
+    console.error('Error querying products:', error);
+    throw error;
   }
-
-  if (collectionId) {
-    products = products.filter((product) => product.collectionIds.indexOf(collectionId) !== -1)
-  }
-
-  if (limit) {
-    products = products.slice(0, limit)
-  }
-
-  return products;
 };
+
